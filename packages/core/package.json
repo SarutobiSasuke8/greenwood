@@ -1,0 +1,29 @@
+{
+  "name": "@greenwood/core",
+  "version": "0.2.0",
+  "description": "Registry, chain providers, screen scoring and snapshot assembly for Greenwood, the Robinhood Chain game index.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test \"dist/**/*.test.js\"",
+    "sweep": "tsc -p tsconfig.json && node dist/cli/sweep.js"
+  },
+  "dependencies": {
+    "viem": "^2.56.3",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "typescript": "^5.9.3"
+  }
+}

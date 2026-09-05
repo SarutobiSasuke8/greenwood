@@ -1,0 +1,17 @@
+{
+  "name": "greenwood",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Greenwood: a game index for Robinhood Chain that screens whether a listing is a real build or a ticker with art. Live chain data, public API, MCP server.",
+  "packageManager": "pnpm@10.33.2",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "build": "pnpm -r --filter @greenwood/core build && pnpm -r --filter @greenwood/mcp build && pnpm --filter @greenwood/web build",
+    "dev": "pnpm --filter @greenwood/core build && pnpm --filter @greenwood/web dev",
+    "start": "pnpm --filter @greenwood/web start",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @greenwood/core test",
+    "mcp": "pnpm --filter @greenwood/mcp start",
+    "sweep": "pnpm --filter @greenwood/core sweep"
+  }
+}
