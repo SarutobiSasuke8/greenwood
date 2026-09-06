@@ -154,11 +154,11 @@ export const REGISTRY: GameRecord[] = [
     tokenGated: true,
     teamVisibility: 0,
     tickerCollisions: 3,
-    unattestedContracts: [],
+    unattestedContracts: ["0xD4DC6B48Ad73EC51E71D9B8F65568f88609b92c1"],
     discoveredVia: "PLAYHOOD",
     evidence: [
       { date: "2026-09-06", note: "sherwoodonline.xyz returns SERVFAIL." },
-      { date: "2026-09-06", note: "Four or more Sherwood-named contracts on chain (Protocol, Exchange, Shark). No attestation for this project's token." },
+      { date: "2026-09-06", note: "Four or more Sherwood-named contracts on chain (Protocol WOOD, Exchange SWOOD, Shark SHERK). A Sherwood/SHERWOOD candidate exists at 0xD4DC6B48Ad73EC51E71D9B8F65568f88609b92c1 but is not written as attested: the project's site is down, so nothing can confirm it." },
     ],
     verdict: "Token-gated entry meant every player was a forced buyer. With the site gone, only the sellers are left.",
     lastVerified: "2026-09-06",
