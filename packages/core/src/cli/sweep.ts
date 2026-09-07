@@ -16,7 +16,7 @@ const rows = snaps
     ticker: s.record.ticker ?? "-",
     screen: s.screen.total ?? "-",
     band: s.screen.band,
-    site: s.liveness ? (s.liveness.ok ? `up ${s.liveness.httpStatus}` : `DOWN ${s.liveness.detail ?? ""}`) : "-",
+    site: s.liveness ? (s.liveness.ok === true ? `up ${s.liveness.httpStatus}` : s.liveness.ok === false ? `HTTP unavailable ${s.liveness.httpStatus}` : `CHECK UNKNOWN ${s.liveness.detail ?? ""}`) : "-",
     priceUsd: s.market?.priceUsd ?? null,
     liqUsd: s.market?.liquidityUsd ?? null,
     holders: s.token?.holders ?? null,
@@ -25,6 +25,6 @@ const rows = snaps
 console.table(rows);
 
 for (const s of snaps) {
-  const errs = Object.entries(s.sources).filter(([, v]) => v.state === "error");
+  const errs = Object.entries(s.sources).filter(([, v]) => v?.state === "error");
   if (errs.length) console.log(`! ${s.record.name}: ${errs.map(([k, v]) => `${k}: ${v.detail}`).join(" | ")}`);
 }

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { ChainStatus } from "@greenwood/core";
 import { NAV } from "@/lib/site";
 import { ChainPulse } from "./ChainPulse";
+import { LinkIcon } from "./LinkIcon";
 import { Mark } from "./Mark";
 
 export function SiteHeader({ chain }: { chain: ChainStatus | null }) {
@@ -25,9 +26,10 @@ export function SiteHeader({ chain }: { chain: ChainStatus | null }) {
   }, [pathname]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    const onKey = (event: KeyboardEvent) => { if(open && event.key === "Escape") { setOpen(false); document.querySelector<HTMLButtonElement>(".nav-toggle")?.focus(); } };
+    document.addEventListener("keydown",onKey);
     return () => {
-      document.body.style.overflow = "";
+      document.removeEventListener("keydown",onKey);
     };
   }, [open]);
 
@@ -43,7 +45,7 @@ export function SiteHeader({ chain }: { chain: ChainStatus | null }) {
           <Mark />
           <span className="brand-text">
             <span className="brand-name">Greenwood</span>
-            <span className="brand-sub">Robinhood Chain game index</span>
+            <span className="brand-sub">Off the beaten chain</span>
           </span>
         </Link>
 
@@ -52,7 +54,7 @@ export function SiteHeader({ chain }: { chain: ChainStatus | null }) {
             {NAV.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className={`nav-link${isActive(item.href) ? " is-active" : ""}`} aria-current={isActive(item.href) ? "page" : undefined}>
-                  {item.label}
+                  <LinkIcon label={item.label}/>{item.label}
                 </Link>
               </li>
             ))}
@@ -81,8 +83,8 @@ export function SiteHeader({ chain }: { chain: ChainStatus | null }) {
       {open && (
         <div id="mobile-panel" className="mobile-panel">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className={`mobile-link${isActive(item.href) ? " is-active" : ""}`}>
-              {item.label}
+            <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={`mobile-link${isActive(item.href) ? " is-active" : ""}`}>
+              <LinkIcon label={item.label}/>{item.label}
             </Link>
           ))}
           <div className="mobile-actions">

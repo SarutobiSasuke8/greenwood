@@ -1,0 +1,1 @@
+export default function Loading(){return <div className="page-wrap section" role="status"><p className="eyebrow">GREENWOOD</p><h1>Opening the field guide…</h1><p>Loading the latest available observations.</p></div>;}

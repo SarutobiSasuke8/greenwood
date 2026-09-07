@@ -7,7 +7,7 @@ import { SITE } from "./site";
  * matches the refresh promise in the footer. A failed provider inside the sweep
  * is recorded per snapshot, never hidden behind a stale cache hit.
  */
-export const getSnapshots = unstable_cache(async (): Promise<GameSnapshot[]> => snapshotAll(), ["greenwood:snapshots:v2"], {
+export const getSnapshots = unstable_cache(async (): Promise<GameSnapshot[]> => snapshotAll(), ["greenwood:snapshots:v3"], {
   revalidate: SITE.refreshSeconds,
   tags: ["snapshots"],
 });
@@ -36,7 +36,7 @@ export function indexStats(snaps: GameSnapshot[]) {
   return {
     indexed: snaps.length,
     playable: snaps.filter((s) => s.record.playable === true && s.liveness?.ok).length,
-    sitesDown: snaps.filter((s) => s.liveness && !s.liveness.ok).length,
+    sitesDown: snaps.filter((s) => s.liveness?.ok === false).length,
     withMarket: snaps.filter((s) => s.market && (s.market.liquidityUsd ?? 0) >= 100).length,
     collisions: snaps.filter((s) => s.record.tickerCollisions >= 1).length,
     medianScreen: median,

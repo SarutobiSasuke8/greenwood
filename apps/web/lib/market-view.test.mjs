@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {marketView,MARKET_MAX_AGE_MS} from './market-view.ts';
+const now=Date.parse('2026-09-07T18:00:00Z');
+const fixture=()=>({record:{tokenAddress:'0x123'},sources:{dexscreener:{state:'ok',fetchedAt:new Date(now).toISOString()}},market:{priceUsd:2,priceChange24h:3,liquidityUsd:1000,volume24hUsd:30}});
+test('eligible quote retains observed fields',()=>assert.equal(marketView(fixture(),now).price,2));
+test('tiny pools cannot advertise extreme prices',()=>{const s=fixture();s.market.priceUsd=20e9;s.market.liquidityUsd=.99;const v=marketView(s,now);assert.equal(v.price,null);assert.equal(v.change,null);assert.equal(v.liquidity,.99);});
+test('missing liquidity is not observed zero',()=>{const s=fixture();s.market.liquidityUsd=null;assert.equal(marketView(s,now).reason,'Liquidity unavailable');});
+test('expired and failed requests suppress current market values',()=>{const s=fixture();assert.equal(marketView(s,now+MARKET_MAX_AGE_MS).price,null);assert.equal(marketView(s,now,true).liquidity,null);s.sources.dexscreener.state='error';assert.equal(marketView(s,now).price,null);});
+test('unattested and malformed values never become headline prices',()=>{const s=fixture();s.record.tokenAddress=null;assert.equal(marketView(s,now).price,null);s.record.tokenAddress='0x123';s.market.priceUsd=Infinity;assert.equal(marketView(s,now).price,null);s.market.priceUsd=-1;assert.equal(marketView(s,now).price,null);});

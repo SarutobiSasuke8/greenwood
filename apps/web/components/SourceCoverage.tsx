@@ -1,0 +1,5 @@
+import type { GameSnapshot } from '@greenwood/core';
+export function SourceCoverage({ snapshot }: { snapshot: GameSnapshot }) {
+ const names: Record<string,string>={dexscreener:'Market lookup',blockscout:'Token metadata',holders:'Holder concentration',liveness:'Website probe'};
+ return <section className="source-coverage"><h2>What we could check</h2><p>{snapshot.partial ? 'Some checks are incomplete. Missing observations remain unknown.' : 'Provider requests completed. Coverage below shows which observations were usable.'}</p><dl>{Object.entries(snapshot.sources).map(([key,source])=>source && <div key={key}><dt>{names[key] ?? key}</dt><dd><strong data-state={source.state}>{source.state==='ok'?'Received':source.state==='error'?'Unavailable':'Not checked'}</strong>{source.fetchedAt && <time dateTime={source.fetchedAt}>{new Date(source.fetchedAt).toUTCString()}</time>}{source.detail && <span>{source.detail}</span>}</dd></div>)}</dl><p>Received means the request completed, not that a pool exists or a game is safe.</p></section>;
+}

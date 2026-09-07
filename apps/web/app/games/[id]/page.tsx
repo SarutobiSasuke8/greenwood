@@ -1,3 +1,9 @@
+import { CopyAction } from "@/components/CopyAction";
+import { SourceCoverage } from "@/components/SourceCoverage";
+import { GameLogo } from "@/components/GameLogo";
+import { GameLinks } from "@/components/GameLinks";
+import { MarketPanel } from "@/components/MarketPanel";
+import { SaveGame } from "@/components/SaveGame";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -41,7 +47,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const tradeable = Boolean(market && (market.liquidityUsd ?? 0) >= 100);
 
   return (
-    <div className="page-wrap" style={{ ["--band" as string]: band }}>
+    <div className="page-wrap game-detail-page" style={{ ["--band" as string]: band }}>
       <nav className="crumbs" aria-label="Breadcrumb">
         <Link href="/">Index</Link>
         <span aria-hidden="true">/</span>
@@ -53,44 +59,39 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           <p className="eyebrow">
             {record.genre} · {record.status.replace("-", " ")} · verified {record.lastVerified}
           </p>
-          <h1 style={{ marginTop: 10 }}>{record.name}</h1>
+          <div className="detail-identity"><GameLogo record={record} large/><h1>{record.name}</h1></div>
           <div className="detail-sub">
             {record.ticker && <span className="tick">${record.ticker}</span>}
-            <span className="band-pill">{screen.band}</span>
-            {record.website && (
-              <a href={record.website} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
-                {record.website.replace(/^https?:\/\/(www\.)?/, "")}
-              </a>
-            )}
-            {record.socials.x && (
-              <a href={record.socials.x} target="_blank" rel="noopener noreferrer">
-                X
-              </a>
-            )}
-            {record.socials.telegram && (
-              <a href={record.socials.telegram} target="_blank" rel="noopener noreferrer">
-                Telegram
-              </a>
-            )}
-            {record.socials.discord && (
-              <a href={record.socials.discord} target="_blank" rel="noopener noreferrer">
-                Discord
-              </a>
-            )}
+            <span className="band-pill">Directory record</span>
           </div>
           <p className="lead" style={{ marginTop: 16, fontSize: "1.05rem" }}>
             {record.summary}
           </p>
         </div>
         <div className="score-big">
-          <p className="eyebrow">Greenwood screen</p>
-          <div className="n">{screen.total ?? "—"}</div>
+          <p className="eyebrow">Evidence coverage</p>
+          <div className="n">{screen.coverage.observed}/{screen.coverage.required}</div>
           <p className="eyebrow" style={{ marginTop: 6 }}>
-            refreshed {timeAgo(snap.fetchedAt)}
+            criteria observed
           </p>
         </div>
       </header>
 
+      <div className="detail-actions">
+        {record.website && <a className="btn btn-primary" href={record.website} target="_blank" rel="noopener noreferrer">{record.status === "dormant" ? "Last known website ↗" : "Visit official website ↗"}</a>}
+        <SaveGame id={record.id} name={record.name}/><CopyAction label="Share listing"/>
+        <p>You leave Greenwood to play. Check entry requirements on the official site.</p>
+      </div>
+      <section className="player-facts"><h2>Before you jump in</h2><dl><div><dt>Build evidence</dt><dd>{record.playable === true ? 'Previously checked by Greenwood' : record.playable === null ? 'Playability not established' : 'No current build verified'}</dd></div><div><dt>Platform</dt><dd>{record.playerInfo?.platform ?? 'Not established'}</dd></div><div><dt>Entry</dt><dd>{record.playerInfo?.entry ?? (record.tokenGated ? 'Token required in recorded rules' : 'Not established')}</dd></div><div><dt>Wallet</dt><dd>{record.playerInfo?.wallet ?? 'Not established'}</dd></div></dl>{record.playerInfo && <p>Entry details reported by the project, checked {record.playerInfo.checkedAt}. <a href={record.playerInfo.sourceUrl} target="_blank" rel="noopener noreferrer">Source ↗</a></p>}{record.tokenAddress && <div className="contract-copy"><span>Robinhood Chain · 4663</span><code>{record.tokenAddress}</code><CopyAction label="Copy contract" value={record.tokenAddress}/></div>}</section>
+      <SourceCoverage snapshot={snap}/>
+      <section className="listing-links" aria-labelledby="listing-links-title">
+        <h2 id="listing-links-title">Around the game</h2>
+        <p>Project destinations and independent token references. Links open in a new tab; availability can change.</p>
+        <GameLinks record={record} full/>
+        <p className="link-provenance">{record.logo ? <>Logo and additional destinations checked {record.logo.checkedAt}. <a href={record.logo.sourceUrl} target="_blank" rel="noopener noreferrer">Original logo source ↗</a></> : 'Official logo not yet confirmed. A placeholder is shown.'} Social links follow the dated directory record; missing channels are omitted.</p>
+      </section>
+
+      <p className="screen-caveat">Evidence coverage is not a safety rating. Incomplete checks have no total; a failed request cannot establish that a game is dead or a pool is empty.</p>
       <div className="detail-grid">
         <div className="detail-col">
           <div className="flags" style={{ gap: 6 }}>
@@ -117,12 +118,12 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                     </span>
                     <span>
                       <span className="bar">
-                        <i style={{ width: `${c.score}%`, background: scoreColor(c.score) }} />
+                        <i style={{ width: `${c.score ?? 0}%`, background: scoreColor(c.score) }} />
                       </span>
                       <span className="basis">{c.basis}</span>
                     </span>
                     <span className="val" style={{ color: scoreColor(c.score) }}>
-                      {c.score}
+                      {c.score ?? "Unknown"}
                     </span>
                   </li>
                 ))}
@@ -135,7 +136,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             <p className="prose">{record.verdict}</p>
           </section>
 
-          <section className="card">
+          <section className="card" id="evidence">
             <h3>Evidence</h3>
             <ul className="evidence">
               {record.evidence.map((e, i) => (
@@ -175,44 +176,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </div>
 
         <aside className="detail-col">
-          <section className="card">
-            <h3>
-              Market <Src label="DexScreener" state={sources.dexscreener.state} detail={sources.dexscreener.detail} />
-            </h3>
-            {market ? (
-              <dl className="kv">
-                <dt>Price</dt>
-                <dd>{fmtPrice(market.priceUsd)}</dd>
-                <dt>24h change</dt>
-                <dd className={market.priceChange24h === null ? "dim" : market.priceChange24h >= 0 ? "up" : "down"}>{fmtPct(market.priceChange24h)}</dd>
-                <dt>Liquidity</dt>
-                <dd>{fmtUsdCompact(market.liquidityUsd)}</dd>
-                <dt>24h volume</dt>
-                <dd>{fmtUsdCompact(market.volume24hUsd)}</dd>
-                <dt>24h trades</dt>
-                <dd>{market.txns24h ? `${market.txns24h.buys} buys · ${market.txns24h.sells} sells` : "—"}</dd>
-                <dt>FDV</dt>
-                <dd>{fmtUsdCompact(market.fdvUsd)}</dd>
-                <dt>Pool</dt>
-                <dd>
-                  {market.dex} · {market.quoteSymbol} ·{" "}
-                  {market.dexscreenerUrl ? (
-                    <a href={market.dexscreenerUrl} target="_blank" rel="noopener noreferrer">
-                      {shortAddr(market.pairAddress)}
-                    </a>
-                  ) : (
-                    shortAddr(market.pairAddress)
-                  )}
-                </dd>
-                <dt>Pool created</dt>
-                <dd>{fmtDate(market.pairCreatedAt)}</dd>
-              </dl>
-            ) : (
-              <p className="prose" style={{ fontSize: "0.92rem" }}>
-                {record.tokenAddress ? "No pool is indexed for the attested contract. No price is shown because none can be verified." : "No attested token contract, so no market is quoted."}
-              </p>
-            )}
-          </section>
+          <MarketPanel snapshot={snap} renderedAt={Date.now()}/>
 
           <section className="card">
             <h3>
@@ -251,7 +215,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             {liveness ? (
               <dl className="kv">
                 <dt>Status</dt>
-                <dd className={liveness.ok ? "up" : "down"}>{liveness.ok ? `up · HTTP ${liveness.httpStatus}` : `down · ${liveness.detail ?? "no response"}`}</dd>
+                <dd className={liveness.ok === true ? "up" : liveness.ok === false ? "down" : ""}>{liveness.ok === true ? `Responded · HTTP ${liveness.httpStatus}` : liveness.ok === false ? `Unavailable · HTTP ${liveness.httpStatus}` : `Check unavailable · ${liveness.detail ?? "unknown"}`}</dd>
                 <dt>Latency</dt>
                 <dd>{liveness.latencyMs !== null ? `${liveness.latencyMs} ms` : "—"}</dd>
                 <dt>Checked</dt>
@@ -268,7 +232,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             <h3>Reported economy</h3>
             {reports.length === 0 ? (
               <p className="prose" style={{ fontSize: "0.92rem" }}>
-                No studio-reported figures yet. Studios can submit DAU, faucets, sinks and marketplace volume through the{" "}
+                No studio-reported figures yet. New submissions are disabled while the reporting system is hardened. Read the{" "}
                 <Link href="/developers#economy" style={{ color: "var(--accent)" }}>
                   economy ingest contract
                 </Link>
@@ -288,17 +252,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             )}
           </section>
 
-          <section className="trader">
-            <p className="gg">
-              <span className="pulse-dot" style={{ background: tradeable ? "var(--good)" : "var(--line-strong)" }} aria-hidden="true" />
-              Trader panel
-            </p>
-            <p>Position handoff for {record.ticker ? `$${record.ticker}` : "this title"} into a partner trading venue. Calls and entries would sit here.</p>
-            <span className="btn btn-primary" aria-disabled="true" role="button">
-              {tradeable ? "Trade — venue not connected" : "No tradeable market"}
-            </span>
-            <p className="stub">Deliberately unwired. Integration is gated on a partner venue confirming Robinhood Chain asset support. Nothing on this page is a recommendation to trade.</p>
-          </section>
+          <section className="card"><h3>Check the receipts</h3><p className="prose">Confirm the chain, contract and official destination before connecting a wallet elsewhere.</p><Link className="text-link" href="/method">Read the field guide ↗</Link></section>
         </aside>
       </div>
     </div>

@@ -113,25 +113,10 @@ export default function DevelopersPage() {
 
         <h2 id="economy">Economy ingest contract</h2>
         <p>
-          On-chain data describes the token. It cannot say whether the game economy behind it removes more than it issues, or whether anyone logs in. Studios report that here. One report per period; reports are append-only and stored per game.
+          On-chain data describes the token. It cannot say whether the game economy behind it removes more than it issues, or whether anyone logs in. Existing reports can be read here. New report ingestion is disabled pending scoped credentials, idempotency and transactional storage. POST returns 503 even if a legacy token is configured.
         </p>
-        <pre>
-          <code>{`curl -X POST ${base}/games/kindra/economy \\
-  -H "Authorization: Bearer $GREENWOOD_INGEST_TOKEN" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "reportedAt": "2026-09-06T00:00:00Z",
-    "period": "day",
-    "dau": 412,
-    "wau": 1930,
-    "newWallets": 27,
-    "faucetUnits": 184000,
-    "sinkUnits": 221500,
-    "marketplaceVolumeUnits": 96000,
-    "custom": { "bossKills": 811 },
-    "source": "kindra-telemetry v3"
-  }'`}</code>
-        </pre>
+        <pre><code>{`curl ${base}/games/kindra/economy`}</code></pre>
+        <p>The schema below describes stored reports. It is not an enabled submission API.</p>
         <div className="table-scroll">
           <table>
             <thead>

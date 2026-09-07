@@ -22,7 +22,7 @@ export default function McpPage() {
       <h1 style={{ marginTop: 12, fontSize: "clamp(2rem, 3.5vw + 0.5rem, 3.2rem)", fontWeight: 800 }}>Greenwood for agents</h1>
       <div className="prose" style={{ marginTop: 24 }}>
         <p>
-          The MCP server exposes the same registry, live data and screen as the website, as eight tools and one resource, over stdio. It reads the chain directly, so it works without the website running. It is read-only against the chain; the only write is economy ingest, and that is off unless a token is configured.
+          The MCP server exposes the same registry, live data and screen as the website, as eight tools and one resource, over stdio. It reads the chain directly, so it works without the website running. It is read-only against the chain; studio report ingestion is disabled pending scoped credentials and transactional storage.
         </p>
 
         <h2>Install</h2>

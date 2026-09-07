@@ -1,0 +1,2 @@
+"use client";
+export default function ErrorPage({reset}:{reset:()=>void}){return <div className="page-wrap section" role="alert"><p className="eyebrow">REQUEST UNAVAILABLE</p><h1>We could not load this view.</h1><p>Your saved games remain in this browser. Retry to request the page again.</p><button className="btn btn-primary" onClick={reset}>Try again</button><a className="text-link" href="/">Back to the directory</a></div>;}

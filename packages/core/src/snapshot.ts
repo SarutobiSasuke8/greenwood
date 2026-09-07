@@ -18,18 +18,21 @@ export interface SnapshotOptions {
   skipHolders?: boolean;
 }
 
-async function tokenFor(record: GameRecord, opts: SnapshotOptions): Promise<{ token: TokenData | null; status: SourceStatus }> {
+async function tokenFor(record: GameRecord, opts: SnapshotOptions): Promise<{ token: TokenData | null; status: SourceStatus; holders?: SourceStatus }> {
   if (!record.tokenAddress) return { token: null, status: skipped("No attested token contract.") };
   try {
     const info = await tokenInfo(record.tokenAddress);
+    let holders: SourceStatus = skipped("Holder concentration check skipped.");
     if (!opts.skipHolders) {
       try {
         info.top10Share = await top10Share(record.tokenAddress, info.totalSupply);
-      } catch {
+        holders = info.top10Share === null ? skipped("Holder concentration unavailable.") : ok();
+      } catch (err) {
+        holders = failed(err);
         info.top10Share = null;
       }
     }
-    return { token: info, status: ok() };
+    return { token: info, status: ok(), holders };
   } catch (err) {
     // Fall back to the contract itself for metadata. Holders stay null; the RPC cannot count them.
     try {
@@ -59,21 +62,21 @@ export async function snapshotAll(opts: SnapshotOptions = {}): Promise<GameSnaps
 
   return Promise.all(
     records.map(async (record) => {
-      const [{ token, status: tokenStatus }, live] = await Promise.all([
+      const [{ token, status: tokenStatus, holders }, live] = await Promise.all([
         tokenFor(record, opts),
         record.website && !opts.skipLiveness ? checkSite(record.website) : Promise.resolve(null),
       ]);
       const market = record.tokenAddress ? (markets.get(record.tokenAddress.toLowerCase()) ?? null) : null;
       const dexStatus: SourceStatus = record.tokenAddress ? marketStatus : skipped("No attested token contract.");
-      const liveStatus: SourceStatus = !record.website ? skipped("No website on record.") : opts.skipLiveness ? skipped("Liveness check skipped.") : ok();
-      const partial = [dexStatus, tokenStatus, liveStatus].some((s) => s.state === "error");
+      const liveStatus: SourceStatus = !record.website ? skipped("No website on record.") : opts.skipLiveness ? skipped("Liveness check skipped.") : live?.ok === null ? failed(live.detail ?? "Check unavailable") : ok();
+      const partial = [dexStatus, tokenStatus, liveStatus, holders].some((s) => s?.state === "error") || Boolean(record.website && opts.skipLiveness) || Boolean(record.tokenAddress && (!holders || holders.state !== "ok"));
       return {
         record,
         market,
         token,
         liveness: live,
-        screen: buildScreen(record, market, token, live, partial),
-        sources: { dexscreener: dexStatus, blockscout: tokenStatus, liveness: liveStatus },
+        screen: buildScreen(record, market, token, live, partial, dexStatus),
+        sources: { dexscreener: dexStatus, blockscout: tokenStatus, liveness: liveStatus, holders: holders ?? skipped("No holder concentration observation available.") },
         fetchedAt: nowIso(),
         partial,
       };
