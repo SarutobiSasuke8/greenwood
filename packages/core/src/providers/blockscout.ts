@@ -31,6 +31,7 @@ interface BsSearchItem {
 
 export async function tokenInfo(address: Address): Promise<TokenData> {
   const t = await fetchJson<BsToken>(`${blockscoutUrl()}/api/v2/tokens/${address}`);
+  if (t.address_hash && t.address_hash.toLowerCase() !== address.toLowerCase()) throw new Error("Token metadata identity mismatch");
   const holdersRaw = t.holders_count ?? t.holders ?? null;
   return {
     address,
@@ -38,7 +39,7 @@ export async function tokenInfo(address: Address): Promise<TokenData> {
     symbol: t.symbol ?? null,
     decimals: t.decimals ? Number(t.decimals) : null,
     totalSupply: t.total_supply ?? null,
-    holders: holdersRaw ? Number(holdersRaw) : null,
+    holders: holdersRaw !== null && Number.isSafeInteger(Number(holdersRaw)) && Number(holdersRaw) >= 0 ? Number(holdersRaw) : null,
     top10Share: null,
     explorerUrl: explorerTokenUrl(address),
   };
@@ -52,6 +53,7 @@ export async function top10Share(address: Address, totalSupply: string | null): 
   if (top.length === 0) return null;
   const sum = top.reduce((acc, h) => acc + BigInt(h.value), 0n);
   const supply = BigInt(totalSupply);
+  if (sum < 0n || supply <= 0n || sum > supply) throw new Error("Invalid holder concentration");
   // Two decimal places of precision is plenty for a share.
   return Number((sum * 10_000n) / supply) / 10_000;
 }

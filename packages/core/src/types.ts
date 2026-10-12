@@ -31,7 +31,12 @@ export interface GameRecord {
   genre: string;
   summary: string;
   website: string | null;
+  playerInfo?: { platform: "browser" | "desktop" | "mobile"; entry: "free" | "paid" | "token"; wallet: "optional" | "required" | "unknown"; sourceUrl: string; checkedAt: string };
   socials: { x?: string; telegram?: string; discord?: string };
+  /** Static project identity assets, never live market data. Paths are served by the web origin. */
+  logo?: { path: string; sourceUrl: string; checkedAt: string };
+  /** Destinations observed on the project website, independently dated from gameplay verification. */
+  resources?: { label: string; url: string; sourceUrl: string; checkedAt: string }[];
   /** Attested token contract. Null when no project attestation exists, even if candidates are known. */
   tokenAddress: Address | null;
   /** Preferred DEX pair. Null when unknown; providers can still discover one by token address. */
@@ -88,7 +93,7 @@ export interface TokenData {
 
 export interface Liveness {
   url: string;
-  ok: boolean;
+  ok: boolean | null;
   httpStatus: number | null;
   latencyMs: number | null;
   detail?: string;
@@ -97,7 +102,7 @@ export interface Liveness {
 export interface ScreenCriterion {
   key: "build" | "team" | "liquidity" | "spread" | "ticker";
   label: string;
-  score: number;
+  score: number | null;
   weight: number;
   basis: string;
   estimated: boolean;
@@ -107,6 +112,7 @@ export interface Screen {
   /** Weighted 0..100. Null for pre-launch entries, which have nothing to screen. */
   total: number | null;
   band: "sound" | "watch" | "avoid" | "unscreened";
+  coverage: { observed: number; required: number };
   criteria: ScreenCriterion[];
   flags: Flag[];
 }
@@ -129,9 +135,10 @@ export interface GameSnapshot {
     dexscreener: SourceStatus;
     blockscout: SourceStatus;
     liveness: SourceStatus;
+    holders?: SourceStatus;
   };
   fetchedAt: string;
-  /** True when at least one provider failed. UI must show this. */
+  /** True when a provider failed or an applicable check was skipped. */
   partial: boolean;
 }
 

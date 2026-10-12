@@ -72,6 +72,7 @@ export function bandColor(band: string): string {
   }
 }
 
-export function scoreColor(score: number): string {
+export function scoreColor(score: number | null): string {
+  if (score === null) return "var(--ink-3)";
   return score >= 65 ? "var(--good)" : score >= 45 ? "var(--caution)" : "var(--risk)";
 }

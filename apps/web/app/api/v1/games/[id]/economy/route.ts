@@ -20,25 +20,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const { id } = await ctx.params;
-  const expected = process.env.GREENWOOD_INGEST_TOKEN?.trim();
-  if (!expected) return problem(503, "Ingest disabled", "GREENWOOD_INGEST_TOKEN is not configured on this server.");
-  const auth = req.headers.get("authorization") ?? "";
-  if (auth !== `Bearer ${expected}`) return problem(401, "Unauthorised", "A valid bearer token is required.");
-  if (!getRecord(id)) return problem(404, "Unknown game", `No registry entry with id "${id}".`);
-
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return problem(400, "Invalid JSON");
-  }
-  try {
-    const saved = await appendEconomyReport(id, body);
-    return json({ saved }, { status: 201, maxAge: 0 });
-  } catch (err) {
-    return problem(422, "Report rejected", err instanceof Error ? err.message : String(err));
-  }
+  return problem(503, "Ingest disabled", "Studio reporting is read-only pending scoped credentials and transactional storage.");
 }
 
 export function OPTIONS() {

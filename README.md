@@ -74,7 +74,7 @@ curl http://localhost:3210/api/v1/games/kindra
 curl http://localhost:3210/api/v1/openapi.json
 ```
 
-See [`docs/API.md`](docs/API.md), including the economy ingest contract.
+See [`docs/API.md`](docs/API.md), including the read-only economy contract.
 
 ## Environment
 
@@ -83,7 +83,7 @@ See [`docs/API.md`](docs/API.md), including the economy ingest contract.
 | `GREENWOOD_RPC_URL` | public Robinhood RPC | Swap for Alchemy/QuickNode in production |
 | `GREENWOOD_BLOCKSCOUT_URL` | `https://robinhoodchain.blockscout.com` | Explorer instance |
 | `GREENWOOD_DATA_DIR` | `./data` | Where economy reports are stored |
-| `GREENWOOD_INGEST_TOKEN` | unset | Enables `POST /api/v1/games/:id/economy` and the MCP submit tool |
+| `GREENWOOD_INGEST_TOKEN` | unset | Legacy setting; cannot enable ingestion in v0.3 |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3210` | Canonical URL, OpenAPI servers |
 
 ## Adding a game
@@ -101,3 +101,7 @@ Node's built-in runner over the compiled core. Covers registry integrity, band o
 ## Independence
 
 Greenwood is independent and not affiliated with Robinhood Markets, Inc., Offchain Labs, DexScreener or any listed project. Nothing here is investment advice. MIT licence.
+
+## Improvement sweep
+
+See [the implementation plan](docs/IMPROVEMENT-SWEEP.md), [method v0.3](docs/METHOD.md) and [release checklist](docs/RELEASE.md). Criteria can be null; incomplete totals are withheld. Studio writes are disabled at every boundary. Run `pnpm test`, `pnpm test:ui`, `pnpm build`, then `pnpm smoke` against a running preview.

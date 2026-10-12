@@ -1,3 +1,7 @@
+# v0.3 compatibility notice
+
+Criterion scores are nullable, and coverage reports observed/required inputs. Failed or skipped checks withhold the total. Holder concentration has its own source status. Legacy bands remain only for complete observations. Studio report writes are disabled regardless of GREENWOOD_INGEST_TOKEN; any older submission examples below are historical schema examples, not an enabled endpoint.
+
 # MCP server
 
 `packages/mcp` — stdio transport, reads the chain directly through `@greenwood/core`. Works without the website.

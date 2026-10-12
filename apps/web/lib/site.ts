@@ -1,8 +1,8 @@
 export const SITE = {
   name: "Greenwood",
-  tagline: "A game index for Robinhood Chain that ranks the build before it prices the token.",
+  tagline: "Independent game discovery for Robinhood Chain.",
   description:
-    "Greenwood screens every game on Robinhood Chain for a playable build, a visible team, real liquidity, holder spread and ticker clarity, using live chain data. Public API and MCP server included.",
+    "Discover Robinhood Chain games with dated build evidence, official links and transparent market observations.",
   url: process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3210",
   github: "https://github.com/SarutobiSasuke8/greenwood",
   x: "https://x.com/Sarut0biSasuke",
@@ -11,10 +11,10 @@ export const SITE = {
 };
 
 export const NAV = [
-  { href: "/", label: "Index" },
-  { href: "/method", label: "Method" },
-  { href: "/developers", label: "API" },
-  { href: "/mcp", label: "MCP" },
+  { href: "/", label: "Discover" },
+  { href: "/contracts", label: "Contracts" },
+  { href: "/watchlist", label: "Watchlist" },
+  { href: "/method", label: "Field guide" },
   { href: "/about", label: "About" },
 ] as const;
 

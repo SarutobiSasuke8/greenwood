@@ -7,6 +7,7 @@ const CHAIN = "robinhood";
 interface DsPair {
   chainId: string;
   dexId: string;
+  labels?: string[];
   url: string;
   pairAddress: string;
   baseToken: { address: string; name: string; symbol: string };
@@ -21,20 +22,26 @@ interface DsPair {
   pairCreatedAt?: number;
 }
 
+const finite = (n: unknown, signed = false): number | null => { const v = typeof n === "string" && n.trim() !== "" ? Number(n) : n; return typeof v === "number" && Number.isFinite(v) && (signed || v >= 0) ? v : null; };
+const address = (s: unknown): s is Address => typeof s === "string" && /^0x[0-9a-f]{40}$/i.test(s);
+
+// Uniswap v4 uses bytes32 pool IDs; token contracts remain 20-byte addresses.
+const poolId = (p: DsPair): boolean => address(p.pairAddress) || (p.dexId === 'uniswap' && Array.isArray(p.labels) && p.labels.includes('v4') && typeof p.pairAddress === 'string' && /^0x[0-9a-f]{64}$/i.test(p.pairAddress));
+
 function toMarket(p: DsPair): MarketData {
   return {
-    priceUsd: p.priceUsd ? Number(p.priceUsd) : null,
-    priceChange24h: p.priceChange?.h24 ?? null,
-    volume24hUsd: p.volume?.h24 ?? null,
-    liquidityUsd: p.liquidity?.usd ?? null,
-    fdvUsd: p.fdv ?? null,
-    marketCapUsd: p.marketCap ?? null,
-    txns24h: p.txns?.h24 ?? null,
+    priceUsd: finite(p.priceUsd),
+    priceChange24h: finite(p.priceChange?.h24, true),
+    volume24hUsd: finite(p.volume?.h24),
+    liquidityUsd: finite(p.liquidity?.usd),
+    fdvUsd: finite(p.fdv),
+    marketCapUsd: finite(p.marketCap),
+    txns24h: p.txns?.h24 && finite(p.txns.h24.buys) !== null && finite(p.txns.h24.sells) !== null ? p.txns.h24 : null,
     pairAddress: p.pairAddress as Address,
-    pairCreatedAt: p.pairCreatedAt ? new Date(p.pairCreatedAt).toISOString() : null,
+    pairCreatedAt: finite(p.pairCreatedAt) !== null && p.pairCreatedAt! <= Date.now() ? new Date(p.pairCreatedAt!).toISOString() : null,
     dex: p.dexId ?? null,
     quoteSymbol: p.quoteToken?.symbol ?? null,
-    dexscreenerUrl: p.url ?? null,
+    dexscreenerUrl: `https://dexscreener.com/${CHAIN}/${p.pairAddress}`,
   };
 }
 
@@ -50,8 +57,11 @@ export async function marketByTokens(addresses: Address[]): Promise<Map<string, 
   for (let i = 0; i < addresses.length; i += 30) {
     const batch = addresses.slice(i, i + 30);
     const pairs = await fetchJson<DsPair[]>(`${BASE}/tokens/v1/${CHAIN}/${batch.join(",")}`);
+    if (!Array.isArray(pairs)) throw new Error('Malformed market response');
+    const requested = new Set(batch.map(a => a.toLowerCase()));
     for (const p of pairs) {
-      if (p.chainId !== CHAIN) continue;
+      if (!p || p.chainId !== CHAIN || !address(p.baseToken?.address) || !poolId(p)) throw new Error('Market response identity mismatch');
+      if (!requested.has(p.baseToken.address.toLowerCase())) continue;
       const key = p.baseToken.address.toLowerCase();
       const existing = out.get(key);
       // Keep the deepest pool per token.
@@ -63,6 +73,6 @@ export async function marketByTokens(addresses: Address[]): Promise<Map<string, 
 
 export async function marketByPair(pair: Address): Promise<MarketData | null> {
   const res = await fetchJson<{ pairs: DsPair[] | null }>(`${BASE}/latest/dex/pairs/${CHAIN}/${pair}`);
-  const p = res.pairs?.[0];
+  const p = res.pairs?.find(p => p.chainId === CHAIN && p.pairAddress.toLowerCase() === pair.toLowerCase());
   return p ? toMarket(p) : null;
 }

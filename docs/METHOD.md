@@ -1,29 +1,27 @@
-# Method
+# Greenwood evidence method v0.3
 
-Greenwood answers one question about every title on Robinhood Chain: is this a game, or a ticker with art?
+Discovery, build evidence and token observations are separate. A live website is not a playtest. A score is not a safety verdict, investment recommendation or measure of fun.
 
-## Criteria and weights
+## Criteria
 
-| Criterion | Weight | Rule |
-|---|---|---|
-| Playable build | 0.30 | 0 if the site does not serve a page or none is recorded. 100 playable without the token. 55 site live, playability not established. 30 site live, nothing playable. Minus 25 if token-gated. |
-| Team visibility | 0.15 | 10 anonymous · 45 pseudonymous · 75 named individuals · 95 named entity. |
-| Liquidity depth | 0.20 | Best pool USD: <100 → 0 (drained) · <10K → 20 · <50K → 45 · <250K → 70 · else 95. No pool → 0. |
-| Holder spread | 0.15 | Top-ten share: ≤20% → 95 · ≤35% → 75 · ≤50% → 50 · ≤70% → 25 · else 10. Fallback by holder count (≥5000 → 70 · ≥1000 → 55 · ≥300 → 40 · ≥50 → 20 · else 5), marked `estimated`. |
-| Ticker clarity | 0.20 | 0 collisions → 95 · 1 → 60 · 2 → 35 · ≥3 → 15. Capped at 30 without an attested contract. |
+| Criterion | Weight | Observed-data rule |
+| --- | --- | --- |
+| Build | 30% | 100 for a manually checked playable build with a successful website probe; 55 if gameplay is unestablished; 30 if no playable build was found; subtract 25 for recorded token-gated entry. A confirmed HTTP 404/410 scores 0. A blocked, timed-out, failed or skipped probe is unknown. No website on record scores 0. |
+| Team visibility | 15% | Legacy descriptive scale: 10 unrecorded identity, 45 pseudonymous handles, 75 named individuals, 95 named entity. This is documentation coverage, not integrity or fraud risk. |
+| Liquidity | 20% | Best observed pool USD: below 100 scores 0; below 10K 20; below 50K 45; below 250K 70; otherwise 95. An explicitly successful empty lookup scores 0. Missing fields and provider failures are unknown. Zero liquidity is an observation; it does not prove a rug or exit. |
+| Holder concentration | 15% | Top-ten share: <=20% 95; <=35% 75; <=50% 50; <=70% 25; otherwise 10. Unknown concentration has no score. Holder count is never a substitute for distribution. Addresses may include pools, bridges or custody contracts, not ten individual people. |
+| Ticker clarity | 20% | Legacy scale: 95 for zero recorded collisions, 60 for one, 35 for two, 15 for three or more; capped at 30 without an attested contract. This does not prove global uniqueness. |
 
-Total = Σ score × weight, rounded. Bands: sound ≥ 65 · watch 45–64 · avoid < 45 · unscreened for pre-launch.
+## Coverage and compatibility
 
-## Flags
+Each criterion supplies a nullable score and a written basis. Coverage reports observed/required criteria. A total is withheld if any criterion is unknown or an applicable provider/check failed or was skipped. Do not renormalise remaining weights. Pre-launch entries have no total. Legacy API bands (sound >=65, watch >=45, avoid <45) remain for compatible complete records only; they are not safety judgements. The UI leads with coverage and evidence, not these bands. MCP fast-mode results cannot be compared as lower scores: they are incomplete.
 
-Playable · Site down · Token-gated · Pool drained · Thin liquidity · No market · Ticker collision / Ticker shared · Unattested token · Anonymous team · Top 10 hold N% · Partial data · Pre-launch. Each carries a `reason`.
+## Provider rules
 
-## Data rules
+Provider deadlines include JSON response bodies; bodies are bounded to 5 MB. Website probes examine headers and cancel the body. HTTP 403/429/5xx and network failures mean check unavailable, not game abandonment. HTTP 404/410 describes the requested website endpoint only.
 
-1. Nothing is backfilled. Failed provider → null field, `partial: true`.
-2. Contracts are attested, never matched by name or ticker.
-3. Liveness is checked directly, one request per listing per refresh.
-4. Every criterion returns a `basis` sentence.
-5. Registry evidence is dated; full re-sweep every four weeks.
+DexScreener data must match Robinhood Chain and a requested attested base-token address. Invalid numbers become null; malformed or wrong-chain responses fail rather than implying no pool. The deepest observed pool is selected. Raw observations remain in the API; the UI hides headline quotes for invalid, expired, failed, unattested and below-$100-liquidity observations. A ten-minute expiry measures provider retrieval age, not last trade time.
 
-Implementation: `packages/core/src/screen.ts`. Tests: `packages/core/src/screen.test.ts`.
+Holder subrequests have separate source states. Failed metadata, failed concentration and skipped work remain visible. Manual playability and project entry requirements carry their own dates and source links. Never infer token identity from a ticker.
+
+Studio reports are read-only. Ingestion is disabled at HTTP and shared-core boundaries pending scoped credentials, transactional persistence and idempotency. Missing files mean no reports; corrupt or unreadable files are errors, never empty history.

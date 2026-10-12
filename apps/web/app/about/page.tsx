@@ -13,13 +13,13 @@ export default function AboutPage() {
       <h1 style={{ marginTop: 12, fontSize: "clamp(2rem, 3.5vw + 0.5rem, 3.2rem)", fontWeight: 800 }}>Why Greenwood exists</h1>
       <div className="prose" style={{ marginTop: 24 }}>
         <p>
-          Robinhood Chain went live on 1 July 2026. Within weeks it had a gaming layer, and within weeks that layer was mostly tokens. Robinhood&apos;s own ecosystem directory has no games category. The generalist aggregators list one title. The single purpose-built hub that existed before this one advertised 42 games, surfaced ten, and displayed hardcoded prices on six of them, including a drained pool shown as the chain&apos;s busiest game.
+          Greenwood is an independent, deliberately small directory of Robinhood Chain games. We help you find official destinations, inspect dated build evidence and understand the limits of available token data.
         </p>
         <p>
-          On this chain the player and the trader are the same person. The useful question is not &ldquo;is it fun&rdquo; but &ldquo;is this a game, or a ticker with art&rdquo;. Greenwood answers that first, from live chain data, with every score carrying its reason. <Link href="/method">The method is public.</Link>
+          Some visitors want to play; others want to investigate a token. Greenwood keeps those questions separate. Automated checks show reachability and market observations; only a dated human check establishes playability. <Link href="/method">The method is public.</Link>
         </p>
 
-        <h2>What the first sweep found</h2>
+        <h2>Historical observations: 6 September 2026</h2>
         <ul>
           <li>Of nine titles carried over from the incumbent, five had websites that did not serve a page.</li>
           <li>One title, Kindra, had both a playable build and a functioning market.</li>
@@ -63,7 +63,7 @@ export default function AboutPage() {
 
         <h2 id="listing">Listing a game</h2>
         <p>
-          Greenwood lists games it can verify, not games that ask. To be indexed, send the official site, the token contract address as published on that site, and a contact. The contract is confirmed against the explorer, the site is checked, and the build is played before anything appears. Studios that want to report in-game economy figures receive an ingest token at the same time.
+          Send the official website, gameplay description, supported devices, entry requirements, social links and artwork source. If a token exists, include the address as published by the project and an independent explorer reference. Unverified and pre-launch listings are labelled as such; listing is not endorsement. Studio-report ingestion is currently disabled.
         </p>
         <p>
           Open an issue on <a href={`${SITE.github}/issues/new`}>GitHub</a> or reach out on <a href={SITE.x}>X</a>. There is no paid placement. There will not be.
@@ -71,7 +71,7 @@ export default function AboutPage() {
 
         <h2>Independence</h2>
         <p>
-          Greenwood is independent and not affiliated with Robinhood Markets, Inc., Offchain Labs, DexScreener or any listed project. It holds no position in any listed token at the time of writing and will disclose one if that changes. Nothing on this site is investment advice.
+          Greenwood is independent and not affiliated with Robinhood Markets, Inc., Offchain Labs, DexScreener or any listed project. Listing order is not sold. Nothing on this site is investment advice.
         </p>
         <p>
           Source code, registry and method are public at <a href={SITE.github}>{SITE.github.replace("https://", "")}</a>.

@@ -55,6 +55,8 @@ server.registerTool(
         ticker: s.record.ticker,
         status: s.record.status,
         screen: s.screen.total,
+        coverage: s.screen.coverage,
+        sources: s.sources,
         band: s.screen.band,
         flags: s.screen.flags.map((f) => f.label),
         priceUsd: s.market?.priceUsd ?? null,
@@ -92,14 +94,15 @@ server.registerTool(
   async () =>
     text({
       weights: WEIGHTS,
-      bands: { sound: ">= 65", watch: "45-64", avoid: "< 45", unscreened: "pre-launch" },
+      bands: { sound: ">= 65", watch: "45-64", avoid: "< 45", unscreened: "pre-launch, unknown criteria, failed or skipped applicable checks" },
       criteria: {
-        build: "0 if the site is down or absent; 100 playable without the token; 55 site live but playability unestablished; 30 site live with nothing playable; -25 if entry is token-gated.",
+        build: "Unknown if the probe fails, is blocked or skipped; 0 for HTTP 404/410 or no site; 100 playable without the token; 55 site live but playability unestablished; 30 site live with nothing playable; -25 if entry is token-gated.",
         team: "10 anonymous, 45 pseudonymous, 75 named individuals, 95 named entity.",
-        liquidity: "By best-pool USD: <100 => 0 (drained), <10K => 20, <50K => 45, <250K => 70, else 95. No pool => 0.",
-        spread: "Top-ten share when available (<=20% => 95 down to >70% => 10); otherwise estimated from holder count and marked `estimated`.",
+        liquidity: "By best-pool USD: <100 => 0 (below quote threshold), <10K => 20, <50K => 45, <250K => 70, else 95. Successful empty lookup => 0; missing liquidity or provider failure => null.",
+        spread: "Top-ten share when available (<=20% => 95 down to >70% => 10); otherwise null; holder count is not a concentration measure.",
         ticker: "95 unique, 60 one collision, 35 two, 15 three or more; capped at 30 when no attested contract exists.",
       },
+      coverage: "Observed/required criteria; any unknown or partial input withholds the total. Never renormalise weights.",
       rule: "No field is ever backfilled from a stale value. Missing is shown as missing and the snapshot is marked partial.",
     }),
 );
@@ -173,7 +176,7 @@ server.registerTool(
   "greenwood_submit_economy_report",
   {
     title: "Submit a studio economy report",
-    description: "Append a studio-reported economy report for a game. Requires GREENWOOD_INGEST_TOKEN to be configured on this server and passed as `token`. Same contract as POST /api/v1/games/{id}/economy.",
+    description: "Currently disabled pending scoped credentials and transactional storage. Existing reports remain readable.",
     inputSchema: {
       id: z.string(),
       token: z.string().describe("Ingest bearer token."),
@@ -192,11 +195,7 @@ server.registerTool(
     },
   },
   async ({ id, token, report }) => {
-    const expected = process.env.GREENWOOD_INGEST_TOKEN?.trim();
-    if (!expected) return { isError: true, content: [{ type: "text", text: "Ingest is disabled: GREENWOOD_INGEST_TOKEN is not set on this server." }] };
-    if (token !== expected) return { isError: true, content: [{ type: "text", text: "Invalid ingest token." }] };
-    const saved = await appendEconomyReport(id, report);
-    return text({ saved });
+    return { isError: true, content: [{ type: "text", text: "Studio ingestion is disabled pending scoped credentials and transactional storage." }] };
   },
 );
 

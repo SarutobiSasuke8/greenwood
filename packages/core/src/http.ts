@@ -1,52 +1,41 @@
-/** Fetch with a timeout and a browser-like UA. Blockscout on this chain sits behind Cloudflare and rejects default fetch UAs. */
-
-export const USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36 Greenwood/0.2 (+https://github.com/SarutobiSasuke8/greenwood)";
-
+/** Bounded provider requests. The deadline includes the response body. */
+export const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36 Greenwood/0.3";
 export class HttpError extends Error {
-  constructor(
-    public readonly url: string,
-    public readonly status: number,
-    message?: string,
-  ) {
-    super(message ?? `HTTP ${status} from ${url}`);
-    this.name = "HttpError";
+  constructor(public readonly url: string, public readonly status: number, message?: string) {
+    super(message ?? `HTTP ${status} from ${url}`); this.name = "HttpError";
   }
 }
-
-export async function fetchWithTimeout(
-  url: string,
-  init: RequestInit & { timeoutMs?: number } = {},
-): Promise<Response> {
-  const { timeoutMs = 12_000, ...rest } = init;
+type FetchOptions = RequestInit & { timeoutMs?: number; maxBytes?: number; headersOnly?: boolean };
+export async function fetchWithTimeout(url: string, init: FetchOptions = {}): Promise<Response> {
+  const { timeoutMs = 12_000, maxBytes = 5_000_000, headersOnly = false, ...rest } = init;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const headers = new Headers(rest.headers);
+  if (!headers.has('user-agent')) headers.set('user-agent', USER_AGENT);
+  if (!headers.has('accept')) headers.set('accept', 'application/json, text/html;q=0.8, */*;q=0.5');
   try {
-    return await fetch(url, {
-      ...rest,
-      signal: controller.signal,
-      headers: {
-        "user-agent": USER_AGENT,
-        accept: "application/json, text/html;q=0.8, */*;q=0.5",
-        ...(rest.headers ?? {}),
-      },
-    });
-  } finally {
-    clearTimeout(timer);
-  }
+    const response = await fetch(url, { ...rest, headers, signal: rest.signal ? AbortSignal.any([rest.signal, controller.signal]) : controller.signal });
+    if (headersOnly) { await response.body?.cancel(); return response; }
+    const reader = response.body?.getReader();
+    const chunks: Uint8Array[] = []; let size = 0;
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read(); if (done) break;
+        size += value.byteLength;
+        if (size > maxBytes) { controller.abort(); throw new HttpError(url, response.status, 'Provider response exceeds size limit'); }
+        chunks.push(value);
+      }
+    }
+    const bytes = new Uint8Array(size); let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    return new Response([204,205,304].includes(response.status) ? null : bytes, { status: response.status, statusText: response.statusText, headers: response.headers });
+  } finally { clearTimeout(timer); }
 }
-
-export async function fetchJson<T>(url: string, init?: RequestInit & { timeoutMs?: number }): Promise<T> {
+export async function fetchJson<T>(url: string, init?: FetchOptions): Promise<T> {
   const res = await fetchWithTimeout(url, init);
   if (!res.ok) throw new HttpError(url, res.status);
-  const type = res.headers.get("content-type") ?? "";
-  if (!type.includes("json")) {
-    // Cloudflare challenge pages come back 200 text/html. Treat as an error, never as data.
-    throw new HttpError(url, res.status, `Expected JSON from ${url}, got ${type || "unknown content type"}`);
-  }
-  return (await res.json()) as T;
+  const type = res.headers.get('content-type') ?? '';
+  if (!type.includes('json')) throw new HttpError(url, res.status, `Expected JSON, got ${type || 'unknown content type'}`);
+  return await res.json() as T;
 }
-
-export function nowIso(): string {
-  return new Date().toISOString();
-}
+export function nowIso(): string { return new Date().toISOString(); }

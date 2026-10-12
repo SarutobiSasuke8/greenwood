@@ -37,24 +37,20 @@ function fileFor(gameId: string): string {
 }
 
 export async function listEconomyReports(gameId: string): Promise<EconomyReport[]> {
+  if (!getRecord(gameId)) throw new Error(`Unknown game id: ${gameId}`);
   try {
     const raw = await readFile(fileFor(gameId), "utf8");
-    return JSON.parse(raw) as EconomyReport[];
-  } catch {
+    const records: unknown = JSON.parse(raw);
+    if (!Array.isArray(records)) throw new Error('Invalid report history');
+    return records.map(item => { if (item.gameId !== gameId) throw new Error('Report identity mismatch'); return { gameId, ...economyReportSchema.parse(item) }; });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     return [];
   }
 }
 
 export async function appendEconomyReport(gameId: string, input: unknown): Promise<EconomyReport> {
-  if (!getRecord(gameId)) throw new Error(`Unknown game id: ${gameId}`);
-  const parsed = economyReportSchema.parse(input);
-  const report: EconomyReport = { gameId, ...parsed };
-  await mkdir(dataDir(), { recursive: true });
-  const existing = await listEconomyReports(gameId);
-  existing.push(report);
-  existing.sort((a, b) => a.reportedAt.localeCompare(b.reportedAt));
-  await writeFile(fileFor(gameId), JSON.stringify(existing, null, 2), "utf8");
-  return report;
+  throw new Error("Studio ingestion is disabled pending scoped credentials and transactional storage.");
 }
 
 /** Sink/faucet ratio over the most recent N reports. >1 means the economy removes more than it issues. */
