@@ -98,6 +98,20 @@ pnpm test
 
 Node's built-in runner over the compiled core. Covers registry integrity, band ordering, dead-site zeroing, pre-launch exclusion, partial flagging, ticker collisions and token-gate penalties.
 
+## Local verify
+
+From the repository root, install dependencies and run all 3 existing checks:
+
+```bash
+pnpm install
+pnpm --filter @greenwood/core build
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Build the core first on a fresh checkout: the web app and MCP server consume its generated types from `dist/`. The remaining commands check workspace types, run the core tests and build the core, MCP server and website. Run them locally before opening a PR.
+
 ## Independence
 
 Greenwood is independent and not affiliated with Robinhood Markets, Inc., Offchain Labs, DexScreener or any listed project. Nothing here is investment advice. MIT licence.
