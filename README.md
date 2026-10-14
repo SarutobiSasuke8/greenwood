@@ -6,9 +6,9 @@ Robinhood Chain (chain id 4663) went live on 1 July 2026. Within weeks it had a 
 
 Greenwood asks one question of every title: **is this a game, or a ticker with art?** It answers from live chain data, with every score carrying its written reason, and it refuses to show a number it cannot verify.
 
-- **Website** — index, per-game screen breakdown, evidence, market and token panels, site liveness.
-- **REST API** — the same JSON, with an OpenAPI 3.1 description and a studio economy ingest contract.
-- **MCP server** — eight tools and one resource for Claude, Cursor and any MCP client, reading the chain directly.
+- **Website**: index, per-game screen breakdown, evidence, market and token panels, site liveness.
+- **REST API**: the same JSON, with an OpenAPI 3.1 description and a studio economy ingest contract.
+- **MCP server**: eight tools and one resource for Claude, Cursor and any MCP client, reading the chain directly.
 
 ## The screen
 
@@ -30,15 +30,17 @@ Bands: **sound** ≥ 65, **watch** 45–64, **avoid** < 45. Pre-launch entries a
 4. **Every score carries its basis** as a sentence next to the number.
 5. **Registry edits are dated** and the registry is re-swept every four weeks.
 
-## Layout
+## Workspace index
 
-```
-apps/web            Next.js 15 site + /api/v1 route handlers
-packages/core       registry, chain providers (viem RPC, Blockscout, DexScreener, liveness), screen, snapshot, economy store
-packages/mcp        stdio MCP server over @greenwood/core
-docs/               API, MCP, method, design notes
-data/economy/       studio-reported economy reports (JSON, gitignored)
-```
+Every app and package is listed here and in the [documentation index](docs/README.md). Purpose lines for `@greenwood/core` and `@greenwood/mcp` are their `package.json` descriptions. `@greenwood/web` has no `description` and no package README; its purpose line is the layout sentence this file already used. Status is the package `version`, and `private` where set. Run commands are existing scripts. The [documentation index](docs/README.md) records the build steps those scripts expect. Design notes are [design.md](design.md) at the repository root, not a file under `docs/`.
+
+| Path | Package | Purpose | Status | Run |
+| --- | --- | --- | --- | --- |
+| [apps/web](apps/web/package.json) | `@greenwood/web` | Next.js 15 site + /api/v1 route handlers. | Version 0.2.0, private. | `pnpm dev` |
+| [packages/core](packages/core/package.json) | `@greenwood/core` | Registry, chain providers, screen scoring and snapshot assembly for Greenwood, the Robinhood Chain game index. | Version 0.2.0. | `pnpm sweep` |
+| [packages/mcp](packages/mcp/package.json) | `@greenwood/mcp` | MCP server for Greenwood: live Robinhood Chain game index, screen scores, token economy and contract resolution for AI agents. | Version 0.2.0. | `pnpm --filter @greenwood/core build && pnpm --filter @greenwood/mcp build && pnpm mcp` |
+
+Studio economy JSON, when present, is stored under `data/economy/`. Matching `*.json` files are gitignored.
 
 ## Quick start
 
