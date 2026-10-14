@@ -67,14 +67,45 @@ claude mcp add greenwood -- node /absolute/path/to/greenwood/packages/mcp/dist/i
 
 See [`docs/MCP.md`](docs/MCP.md) for other clients and the tool list.
 
-### API
+## API
+
+Base path `/api/v1`. Read-only, no key, CORS open. Every JSON response carries `generatedAt`; errors are RFC 7807 problems (`application/problem+json`).
+
+| Method | Path | Returns |
+|---|---|---|
+| GET | `/games` | Every snapshot, ranked by screen total. `?status=live\|dormant\|pre-launch\|unverified`, `&minScreen=0..100`, `&sort=screen\|liquidity\|holders\|change` |
+| GET | `/games/{id}` | One snapshot: record, market, token, liveness, screen with a `basis` per criterion, sources, `partial`. 404 for anything that is not a registry id, including names, tickers and addresses |
+| GET | `/games/{id}/economy` | On-chain economy plus stored studio reports and the sink/faucet ratio |
+| POST | `/games/{id}/economy` | Disabled. 503 for every caller, with or without a bearer token |
+| GET | `/registry` | The attested registry, no live data |
+| GET | `/collisions` | Ticker collisions |
+| GET | `/chain` | Block, block time, gas, ETH price and provider states |
+| GET | `/health` | 200 when the RPC answers, 503 when it does not |
+| GET | `/openapi.json` | The OpenAPI 3.1 document |
 
 ```bash
+curl http://localhost:3210/api/v1/games
 curl http://localhost:3210/api/v1/games/kindra
 curl http://localhost:3210/api/v1/openapi.json
 ```
 
-See [`docs/API.md`](docs/API.md), including the read-only economy contract.
+**Ranking.** The default order is the screen total, so the build is ranked before the token is priced. Games with no total (pre-launch, partial or missing observations) sort last. Under the market orders, a missing pool or holder count also sorts last, never as zero. The rule lives in `packages/core/src/rank.ts` and is shared by the API and the MCP list tool.
+
+**Gaps.** A failed provider never becomes a backfilled value. The field is `null`, `sources.<provider>.state` is `error`, `partial` is `true` and the total is withheld.
+
+### OpenAPI
+
+The document is written in [`apps/web/lib/openapi.ts`](apps/web/lib/openapi.ts), served at `/api/v1/openapi.json` and committed as [`docs/openapi.json`](docs/openapi.json). After changing a route or a response shape, update `lib/openapi.ts` and run `pnpm openapi:write`.
+
+CI and `pnpm test` check that:
+
+- the document is valid OpenAPI 3.1;
+- every route handler under `apps/web/app/api/v1` has a path and method in the document, and every documented operation has a handler (CORS `OPTIONS` handlers excepted);
+- every example validates against its schema;
+- every response in the endpoint tests validates against the document, and every documented status code is exercised;
+- `docs/openapi.json` matches the source (`pnpm openapi:check`).
+
+See [`docs/API.md`](docs/API.md) for field notes and the read-only economy contract.
 
 ## Environment
 
@@ -93,24 +124,31 @@ Edit `packages/core/src/registry.ts`. Copy an entry, fill `evidence` with dated 
 ## Tests
 
 ```bash
-pnpm test
+pnpm test        # core, MCP server, API endpoints and OpenAPI contract
+pnpm test:ui     # market view rules
 ```
 
-Node's built-in runner over the compiled core. Covers registry integrity, band ordering, dead-site zeroing, pre-launch exclusion, partial flagging, ticker collisions and token-gate penalties.
+Everything runs on Node's built-in runner with no network. Provider responses come from fixtures in `packages/core/src/testing/`. The DexScreener response and the RPC block number were recorded on 2026-10-14. The Blockscout bodies are synthetic, because the explorer answered the recording request with a Cloudflare challenge. The fetch stub fails closed: any request that does not match a fixture fails the test.
+
+- **Core**: registry integrity, ranking, band thresholds and weights, provider failures, and the non-negotiables. A failed provider leaves a visible gap. Every criterion carries a basis under every provider outcome. A name, ticker or address never resolves to a contract.
+- **API** (`apps/web/test/`): every `/api/v1` route handler, run in process against the fixtures and validated against the OpenAPI document. The economy `POST` must refuse a missing, wrong and matching bearer token (a throwaway value generated per run) and write nothing.
+- **MCP** (`packages/mcp/src/server.test.ts`): all eight tools and the `greenwood://registry` resource over an in-memory transport.
 
 ## Local verify
 
-From the repository root, install dependencies and run all 3 existing checks:
+From the repository root, install dependencies and run the same checks as CI:
 
 ```bash
 pnpm install
 pnpm --filter @greenwood/core build
 pnpm typecheck
 pnpm test
+pnpm test:ui
+pnpm openapi:check
 pnpm build
 ```
 
-Build the core first on a fresh checkout: the web app and MCP server consume its generated types from `dist/`. The remaining commands check workspace types, run the core tests and build the core, MCP server and website. Run them locally before opening a PR.
+Build the core first on a fresh checkout: the web app and MCP server consume its generated types from `dist/`. CI then starts the built site and runs `pnpm smoke` against it.
 
 ## Independence
 

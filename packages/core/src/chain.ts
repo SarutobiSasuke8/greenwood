@@ -35,7 +35,9 @@ export function publicClient(): PublicClient {
 }
 
 export async function currentBlockNumber(): Promise<number> {
-  const n = await publicClient().getBlockNumber();
+  // No in-process reuse: a failed RPC must show as failed, not as the last good block.
+  // The site caches chain status above this layer, with its own revalidation window.
+  const n = await publicClient().getBlockNumber({ cacheTime: 0 });
   return Number(n);
 }
 
