@@ -8,14 +8,23 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # Reads the pnpm version from the packageManager pin in package.json (pnpm 10).
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - name: Build core (web and MCP consume its types)
+        run: pnpm --filter @greenwood/core build
+      - run: pnpm typecheck
+      - name: Tests (core, MCP, API endpoints and OpenAPI contract; network stubbed)
+        run: pnpm test
       - run: pnpm test:ui
+      - name: OpenAPI document matches docs/openapi.json
+        run: pnpm openapi:check
       - run: pnpm build
       - run: |
           pnpm start > /tmp/greenwood-preview.log 2>&1 &

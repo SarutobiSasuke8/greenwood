@@ -36,7 +36,9 @@ A live game index for Robinhood Chain (4663). Three surfaces over one core: Next
 | Caching for the site | `apps/web/lib/data.ts` |
 | Design tokens | `apps/web/app/globals.css` |
 | Header / footer | `apps/web/components/SiteHeader.tsx`, `SiteFooter.tsx` |
-| OpenAPI | `apps/web/app/api/v1/openapi.json/route.ts` |
+| OpenAPI (source; `docs/openapi.json` is generated) | `apps/web/lib/openapi.ts` |
+| Ranking (index, API, MCP) | `packages/core/src/rank.ts` |
+| Test fixtures and fail-closed network stub | `packages/core/src/testing/` |
 
 ## Registry hygiene
 

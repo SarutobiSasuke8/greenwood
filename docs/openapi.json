@@ -1,0 +1,1471 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Greenwood API",
+    "version": "0.3.0",
+    "description": "Live Robinhood Chain game index. Attested registry, live market and holder data, five-part screen with a basis sentence per criterion, ticker collisions, and a read-only studio economy contract. Missing fields are null and flagged partial; nothing is backfilled. Contracts are never resolved by name or ticker.",
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3210/api/v1"
+    }
+  ],
+  "paths": {
+    "/games": {
+      "get": {
+        "operationId": "listGames",
+        "summary": "List game snapshots, ranked by screen total by default",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "live",
+                "dormant",
+                "pre-launch",
+                "unverified"
+              ]
+            }
+          },
+          {
+            "name": "minScreen",
+            "in": "query",
+            "description": "Keep games scored at or above this. Unscored games never pass.",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Unknown values fall back to `screen`. Missing observations sort last.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "screen",
+                "liquidity",
+                "holders",
+                "change"
+              ],
+              "default": "screen"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/games/{id}": {
+      "get": {
+        "operationId": "getGame",
+        "summary": "One game snapshot",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Registry id, for example `kindra`. Names, tickers and contract addresses are not accepted.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown id",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/games/{id}/economy": {
+      "get": {
+        "operationId": "getGameEconomy",
+        "summary": "On-chain and studio-reported economy for a game",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Registry id, for example `kindra`. Names, tickers and contract addresses are not accepted.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Economy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EconomyResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown id",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "submitEconomyReport",
+        "summary": "Disabled: studio report ingestion",
+        "description": "Refused for every caller, with or without a bearer token, pending scoped credentials and transactional storage.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Registry id, for example `kindra`. Names, tickers and contract addresses are not accepted.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EconomyReport"
+              },
+              "example": {
+                "reportedAt": "2026-09-06T00:00:00Z",
+                "period": "day",
+                "dau": 412,
+                "wau": 1930,
+                "newWallets": 27,
+                "faucetUnits": 184000,
+                "sinkUnits": 221500,
+                "marketplaceVolumeUnits": 96000,
+                "custom": {
+                  "bossKills": 811
+                },
+                "source": "kindra-telemetry v3"
+              }
+            }
+          }
+        },
+        "responses": {
+          "503": {
+            "description": "Ingest disabled pending scoped credentials and transactional storage",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/registry": {
+      "get": {
+        "operationId": "getRegistry",
+        "summary": "Attested registry without live data",
+        "responses": {
+          "200": {
+            "description": "Registry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/collisions": {
+      "get": {
+        "operationId": "getCollisions",
+        "summary": "Ticker collisions",
+        "responses": {
+          "200": {
+            "description": "Collisions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollisionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chain": {
+      "get": {
+        "operationId": "getChain",
+        "summary": "Chain status",
+        "responses": {
+          "200": {
+            "description": "Status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChainStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Service health",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "degraded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "operationId": "getOpenApi",
+        "summary": "This document",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.1 document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "openapi",
+                    "info",
+                    "paths"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "description": "RFC 7807 problem detail.",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "SourceStatus": {
+        "type": "object",
+        "required": [
+          "state",
+          "fetchedAt"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error",
+              "skipped"
+            ]
+          },
+          "fetchedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "Evidence": {
+        "type": "object",
+        "required": [
+          "date",
+          "note"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "GameRecord": {
+        "type": "object",
+        "description": "Attested registry entry with dated evidence. `tokenAddress` is set only when two independent sources agree; it is never matched by name or ticker.",
+        "required": [
+          "id",
+          "name",
+          "ticker",
+          "genre",
+          "summary",
+          "website",
+          "socials",
+          "tokenAddress",
+          "pairAddress",
+          "status",
+          "playable",
+          "tokenGated",
+          "teamVisibility",
+          "tickerCollisions",
+          "unattestedContracts",
+          "discoveredVia",
+          "evidence",
+          "verdict",
+          "lastVerified"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ticker": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "genre": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "socials": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "tokenAddress": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pairAddress": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "live",
+              "dormant",
+              "pre-launch",
+              "unverified"
+            ]
+          },
+          "playable": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tokenGated": {
+            "type": "boolean"
+          },
+          "teamVisibility": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
+          },
+          "tickerCollisions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unattestedContracts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]{40}$"
+            },
+            "description": "Name matches without attestation. Never used for pricing."
+          },
+          "discoveredVia": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            }
+          },
+          "verdict": {
+            "type": "string"
+          },
+          "lastVerified": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        }
+      },
+      "MarketData": {
+        "type": "object",
+        "description": "DexScreener best pool for an attested token.",
+        "required": [
+          "priceUsd",
+          "priceChange24h",
+          "volume24hUsd",
+          "liquidityUsd",
+          "fdvUsd",
+          "marketCapUsd",
+          "txns24h",
+          "pairAddress",
+          "pairCreatedAt",
+          "dex",
+          "quoteSymbol",
+          "dexscreenerUrl"
+        ],
+        "properties": {
+          "priceUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "priceChange24h": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "volume24hUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "liquidityUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fdvUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "marketCapUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "txns24h": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "buys",
+                  "sells"
+                ],
+                "properties": {
+                  "buys": {
+                    "type": "integer"
+                  },
+                  "sells": {
+                    "type": "integer"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pairAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pairCreatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dex": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quoteSymbol": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dexscreenerUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "TokenData": {
+        "type": "object",
+        "description": "Blockscout token data, with contract metadata read over RPC when the explorer fails.",
+        "required": [
+          "address",
+          "name",
+          "symbol",
+          "decimals",
+          "totalSupply",
+          "holders",
+          "top10Share",
+          "explorerUrl"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "symbol": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decimals": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "totalSupply": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "holders": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "top10Share": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "explorerUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "Liveness": {
+        "type": "object",
+        "required": [
+          "url",
+          "ok",
+          "httpStatus",
+          "latencyMs"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "ok": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "httpStatus": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "latencyMs": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "ScreenCriterion": {
+        "type": "object",
+        "description": "One screen criterion. The score is null when unknown; the basis sentence is always present.",
+        "required": [
+          "key",
+          "label",
+          "score",
+          "weight",
+          "basis",
+          "estimated"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "build",
+              "team",
+              "liquidity",
+              "spread",
+              "ticker"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "basis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "estimated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Flag": {
+        "type": "object",
+        "required": [
+          "label",
+          "severity",
+          "reason"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "good",
+              "caution",
+              "risk"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "Screen": {
+        "type": "object",
+        "required": [
+          "total",
+          "band",
+          "coverage",
+          "criteria",
+          "flags"
+        ],
+        "properties": {
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Withheld (null) when any criterion is unknown or the snapshot is partial."
+          },
+          "band": {
+            "type": "string",
+            "enum": [
+              "sound",
+              "watch",
+              "avoid",
+              "unscreened"
+            ]
+          },
+          "coverage": {
+            "type": "object",
+            "required": [
+              "observed",
+              "required"
+            ],
+            "properties": {
+              "observed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "required": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScreenCriterion"
+            },
+            "description": "Five criteria, or none for pre-launch entries."
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Flag"
+            }
+          }
+        }
+      },
+      "Sources": {
+        "type": "object",
+        "description": "Per-provider outcome for the snapshot.",
+        "required": [
+          "dexscreener",
+          "blockscout",
+          "liveness"
+        ],
+        "properties": {
+          "dexscreener": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "blockscout": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "liveness": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "holders": {
+            "$ref": "#/components/schemas/SourceStatus"
+          }
+        }
+      },
+      "GameSnapshot": {
+        "type": "object",
+        "description": "What the chain says right now. A failed provider leaves its field null, records the failure in `sources` and sets `partial`; nothing is backfilled.",
+        "required": [
+          "record",
+          "market",
+          "token",
+          "liveness",
+          "screen",
+          "sources",
+          "fetchedAt",
+          "partial"
+        ],
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/GameRecord"
+          },
+          "market": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MarketData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "token": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TokenData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "liveness": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Liveness"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "screen": {
+            "$ref": "#/components/schemas/Screen"
+          },
+          "sources": {
+            "$ref": "#/components/schemas/Sources"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "partial": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GamesResponse": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "chainId",
+          "count",
+          "games"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "chainId": {
+            "type": "integer",
+            "const": 4663
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "games": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameSnapshot"
+            }
+          }
+        }
+      },
+      "GameResponse": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "game"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "game": {
+            "$ref": "#/components/schemas/GameSnapshot"
+          }
+        }
+      },
+      "EconomyReport": {
+        "type": "object",
+        "required": [
+          "reportedAt",
+          "period",
+          "source"
+        ],
+        "properties": {
+          "reportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week"
+            ]
+          },
+          "dau": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "wau": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "newWallets": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "faucetUnits": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "sinkUnits": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "marketplaceVolumeUnits": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "custom": {
+            "type": "object",
+            "propertyNames": {
+              "maxLength": 48
+            },
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "examples": [
+          {
+            "reportedAt": "2026-09-06T00:00:00Z",
+            "period": "day",
+            "dau": 412,
+            "wau": 1930,
+            "newWallets": 27,
+            "faucetUnits": 184000,
+            "sinkUnits": 221500,
+            "marketplaceVolumeUnits": 96000,
+            "custom": {
+              "bossKills": 811
+            },
+            "source": "kindra-telemetry v3"
+          }
+        ]
+      },
+      "StoredEconomyReport": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EconomyReport"
+          },
+          {
+            "type": "object",
+            "required": [
+              "gameId"
+            ],
+            "properties": {
+              "gameId": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "EconomyResponse": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "game",
+          "onchain",
+          "reported"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "game": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "ticker",
+              "tokenAddress"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "ticker": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tokenAddress": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{40}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "onchain": {
+            "type": "object",
+            "required": [
+              "market",
+              "token",
+              "sources",
+              "fetchedAt"
+            ],
+            "properties": {
+              "market": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/MarketData"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "token": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/TokenData"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sources": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Sources"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fetchedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            }
+          },
+          "reported": {
+            "type": "object",
+            "required": [
+              "count",
+              "latest",
+              "sinkFaucetRatio",
+              "reports"
+            ],
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "latest": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/StoredEconomyReport"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sinkFaucetRatio": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reports": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StoredEconomyReport"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RegistryResponse": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "count",
+          "registry"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "registry": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameRecord"
+            }
+          }
+        }
+      },
+      "TickerCollision": {
+        "type": "object",
+        "required": [
+          "ticker",
+          "projects",
+          "contractsOnChain",
+          "note"
+        ],
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "contractsOnChain": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "CollisionsResponse": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "collisions"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "collisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TickerCollision"
+            }
+          }
+        }
+      },
+      "ChainStatus": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "chainId",
+          "name",
+          "blockNumber",
+          "averageBlockTimeMs",
+          "totalAddresses",
+          "totalBlocks",
+          "gasPriceGwei",
+          "ethPriceUsd",
+          "rpc",
+          "blockscout",
+          "fetchedAt"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "chainId": {
+            "type": "integer",
+            "const": 4663
+          },
+          "name": {
+            "type": "string"
+          },
+          "blockNumber": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "averageBlockTimeMs": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "totalAddresses": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "totalBlocks": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "gasPriceGwei": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "slow",
+                  "average",
+                  "fast"
+                ],
+                "properties": {
+                  "slow": {
+                    "type": "number"
+                  },
+                  "average": {
+                    "type": "number"
+                  },
+                  "fast": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ethPriceUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "rpc": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "blockscout": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "status",
+          "providers",
+          "ingestEnabled",
+          "version"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ]
+          },
+          "providers": {
+            "type": "object",
+            "required": [
+              "rpc",
+              "blockscout"
+            ],
+            "properties": {
+              "rpc": {
+                "$ref": "#/components/schemas/SourceStatus"
+              },
+              "blockscout": {
+                "$ref": "#/components/schemas/SourceStatus"
+              }
+            }
+          },
+          "ingestEnabled": {
+            "type": "boolean",
+            "const": false,
+            "description": "Studio report writes are disabled in this version."
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

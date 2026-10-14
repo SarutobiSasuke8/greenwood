@@ -182,7 +182,7 @@ export default function DevelopersPage() {
           </table>
         </div>
         <p>
-          Ingest is disabled until <code>GREENWOOD_INGEST_TOKEN</code> is set on the server. Tokens are issued per studio on request; see <Link href="/about#listing">listing</Link>. Reported figures are shown separately from on-chain figures and are labelled as studio-reported on every surface.
+          Ingest is disabled in this version: <code>POST</code> returns 503 for every caller, with or without a bearer token, and <code>GREENWOOD_INGEST_TOKEN</code> cannot turn it on. Existing reports stay readable. Reported figures are shown separately from on-chain figures and are labelled as studio-reported on every surface.
         </p>
 
         <h2>Caching and limits</h2>

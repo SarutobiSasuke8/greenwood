@@ -28,7 +28,7 @@ JSON clients (Claude Desktop, Cursor, Windsurf):
 { "mcpServers": { "greenwood": { "command": "node", "args": ["/absolute/path/greenwood/packages/mcp/dist/index.js"] } } }
 ```
 
-Optional env: `GREENWOOD_RPC_URL`, `GREENWOOD_BLOCKSCOUT_URL`, `GREENWOOD_DATA_DIR`, `GREENWOOD_INGEST_TOKEN` (enables the submit tool).
+Optional env: `GREENWOOD_RPC_URL`, `GREENWOOD_BLOCKSCOUT_URL`, `GREENWOOD_DATA_DIR`, `GREENWOOD_INGEST_TOKEN` (legacy; the submit tool stays disabled).
 
 ## Tools
 
