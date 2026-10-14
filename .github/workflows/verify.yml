@@ -20,6 +20,7 @@ jobs:
       - name: Build core (web and MCP consume its types)
         run: pnpm --filter @greenwood/core build
       - run: pnpm typecheck
+      - run: pnpm check:links
       - name: Tests (core, MCP, API endpoints and OpenAPI contract; network stubbed)
         run: pnpm test
       - run: pnpm test:ui

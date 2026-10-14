@@ -16,8 +16,9 @@
     "mcp": "pnpm --filter @greenwood/mcp start",
     "sweep": "pnpm --filter @greenwood/core sweep",
     "test:ui": "node --experimental-strip-types --test apps/web/lib/market-view.test.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "check:links": "node scripts/check-links.mjs",
     "openapi:check": "node --experimental-strip-types --no-warnings scripts/openapi.mjs --check",
-    "openapi:write": "node --experimental-strip-types --no-warnings scripts/openapi.mjs --write",
-    "smoke": "node scripts/smoke.mjs"
+    "openapi:write": "node --experimental-strip-types --no-warnings scripts/openapi.mjs --write"
   }
 }
