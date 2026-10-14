@@ -12,11 +12,13 @@
     "dev": "pnpm --filter @greenwood/core build && pnpm --filter @greenwood/web dev",
     "start": "pnpm --filter @greenwood/web start",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm --filter @greenwood/core test",
+    "test": "pnpm --filter @greenwood/core test && pnpm --filter @greenwood/mcp test && pnpm --filter @greenwood/web test",
     "mcp": "pnpm --filter @greenwood/mcp start",
     "sweep": "pnpm --filter @greenwood/core sweep",
     "test:ui": "node --experimental-strip-types --test apps/web/lib/market-view.test.mjs",
     "smoke": "node scripts/smoke.mjs",
-    "check:links": "node scripts/check-links.mjs"
+    "check:links": "node scripts/check-links.mjs",
+    "openapi:check": "node --experimental-strip-types --no-warnings scripts/openapi.mjs --check",
+    "openapi:write": "node --experimental-strip-types --no-warnings scripts/openapi.mjs --write"
   }
 }

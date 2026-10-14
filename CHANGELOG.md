@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- API and MCP test suite on recorded provider fixtures behind a fail-closed fetch stub (`@greenwood/core/testing`). Endpoint tests for every `/api/v1` handler, MCP tests for all eight tools and the registry resource over an in-memory transport, ranking unit tests, and tests that pin the non-negotiables: failed providers leave gaps, every criterion carries a basis, names and tickers never resolve a contract.
+- OpenAPI 3.1 document moved to `apps/web/lib/openapi.ts` with full response schemas, committed as `docs/openapi.json`. CI checks validity, route parity both ways, examples, response validation and drift (`pnpm openapi:check`).
+- `rankGames` in core, shared by `/api/v1/games` and the MCP list tool.
+
+### Changed
+- `/api/v1/health` reports `ingestEnabled: false` always; ingest is disabled whatever `GREENWOOD_INGEST_TOKEN` holds.
+- Chain status reads the block number without viem's in-process reuse, so a failed RPC shows as failed.
+- MCP server definition split into `server.ts`; `index.ts` stays the stdio entry and `bin`.
+
 ## 0.2.0 — 2026-09-06
 
 First repo build. Replaces the 2026-09-05 static prototype, which carried placeholder figures.

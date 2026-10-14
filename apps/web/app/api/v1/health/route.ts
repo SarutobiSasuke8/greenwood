@@ -13,7 +13,8 @@ export async function GET() {
         rpc: chain?.rpc ?? { state: "error", fetchedAt: null, detail: "chain status unavailable" },
         blockscout: chain?.blockscout ?? { state: "error", fetchedAt: null },
       },
-      ingestEnabled: Boolean(process.env.GREENWOOD_INGEST_TOKEN?.trim()),
+      // Studio writes are disabled at every boundary, whatever GREENWOOD_INGEST_TOKEN holds.
+      ingestEnabled: false,
       version: "0.2.0",
     },
     { status: ok ? 200 : 503, maxAge: 0 },

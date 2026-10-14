@@ -4,14 +4,14 @@ Criterion scores are nullable, and coverage reports observed/required inputs. Fa
 
 # REST API
 
-Base: `/api/v1`. No key to read. CORS open. Every response carries `generatedAt`. Problems use RFC 7807 (`application/problem+json`). OpenAPI 3.1 at `/api/v1/openapi.json`.
+Base: `/api/v1`. No key to read. CORS open. Every response carries `generatedAt`. Problems use RFC 7807 (`application/problem+json`). OpenAPI 3.1 at `/api/v1/openapi.json`, committed as [`openapi.json`](openapi.json) and checked against the route handlers in CI.
 
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/games` | `?status=live|dormant|pre-launch|unverified` `&minScreen=0..100` `&sort=screen|liquidity|holders|change` |
 | GET | `/games/{id}` | Full snapshot |
 | GET | `/games/{id}/economy` | On-chain + studio-reported economy, `sinkFaucetRatio` over last 7 reports |
-| POST | `/games/{id}/economy` | `Authorization: Bearer <GREENWOOD_INGEST_TOKEN>`; body = EconomyReport; 201 on save |
+| POST | `/games/{id}/economy` | Disabled. 503 problem for every caller, with or without a bearer token |
 | GET | `/registry` | Attested registry, no live data |
 | GET | `/collisions` | Ticker collision table |
 | GET | `/chain` | Block, block time, gas, ETH price, provider states |
